@@ -224,6 +224,7 @@ void bellmanFord(struct graph* g, int src){
 
     int i, j, u ,v, weight;
     int dist[g->v];
+    struct node *temp;
 
     for (i = 0; i < g->v; i++){
         dist[i] = INF;
@@ -232,12 +233,17 @@ void bellmanFord(struct graph* g, int src){
 
     for (i = 2; i <= g->v ; i++) {
         for ( j = 1; j < g->v ; j++) {
-            printf("%d %d -> %d\n",g->arr[j]->src,g->arr[j]->val,g->arr[j]->cost);
+            temp = g->arr[j];
             u = g->arr[j]->src;
-            v = g->arr[j]->val;
-            weight = g->arr[j]->cost;
-            if (dist[u] != INF && dist[u] + weight < dist[v])
-                dist[v] = dist[u] + weight;
+            while(temp != NULL){
+                v = temp->val;
+                weight = temp->cost;
+                if (dist[u] != INF && dist[u] + weight < dist[v])
+                    dist[v] = dist[u] + weight;
+
+                temp = temp->next;
+            }
+
         }
     }
 
@@ -287,7 +293,7 @@ void init(){
             printf("%d ",NServers);
             if(NServers > 1){
 
-                /**It only is considered an all-connected network if servers form a loop**/
+                /**It only is considered for an all-connected network**/
                 floydWarshall(adj,sr);
                 if(Cable!=-INF){
                     printf("%d ",Cable);
