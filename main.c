@@ -4,7 +4,7 @@
 #include<string.h>
 
 #define MAX 1024
-#define INF 99999
+#define INF 999999
 
 int V = 0;
 int time = 0;
@@ -114,7 +114,7 @@ void ArPointsRec(struct graph * g,int node,int* isVisited,int* des,int* parent,i
 
 }
 
-struct graph *ArPoints(struct graph* g){
+struct graph *ArPoints(struct graph* g, int *n){
 
     int i,j;
     int* des = (int*)malloc(sizeof(int)*g->v);
@@ -151,6 +151,7 @@ struct graph *ArPoints(struct graph* g){
             if(ap[i]==1){
                 servers->arr[j] = g->arr[i];
                 servers->arr[j]->src = i;
+                n[i] = i;
                 j++;
             }
         }
@@ -162,10 +163,16 @@ struct graph *ArPoints(struct graph* g){
 
 void floydWarshall (struct graph* g, struct graph* sr) {
 
-    int dist[g->v][g->v];
-    int graph[g->v][g->v];
+    int **dist = (int **)malloc(sizeof(int *)*g->v);
+    int **graph = (int **)malloc(sizeof(int *)*g->v);
     struct node *temp;
     int i, j, k;
+
+    for(i = 0; i < g->v; i++){
+        dist[i] = (int *)malloc(sizeof(int)*g->v);
+        graph[i] = (int *)malloc(sizeof(int)*g->v);
+    }
+
 
     for(i = 0;i < g->v; i++){
         for(j = 0; j < g->v; j++){
@@ -176,7 +183,6 @@ void floydWarshall (struct graph* g, struct graph* sr) {
             }
         }
     }
-
     for(i = 1; i < g->v; i++){
         temp = g->arr[i];
         while(temp!=NULL){
@@ -214,40 +220,63 @@ void floydWarshall (struct graph* g, struct graph* sr) {
     if(Cable == -INF){
         Cable = 0;
     }else{
-        Cable += dist[sr->arr[0]->src][sr->arr[(sr->v)-1]->src];
+        if(sr->v > 2){
+            Cable += dist[sr->arr[0]->src][sr->arr[(sr->v)-1]->src];
+        }
     }
 
 
 }
 
-void bellmanFord(struct graph* g, int src){
+void bellmanFord(struct graph* g, int src, struct graph* sr, int *ses){
 
-    int i, j, u ,v, weight;
-    int dist[g->v];
+    int i, j, z, u ,v, weight;
+    int max = INF;
     struct node *temp;
+    int *shortest = (int *)malloc(sizeof(int)*g->v);
 
-    for (i = 0; i < g->v; i++){
-        dist[i] = INF;
-    }
-    dist[src] = 0;
+    for(z = 0; z < sr->v; z++){
 
-    for (i = 2; i <= g->v ; i++) {
-        for ( j = 1; j < g->v ; j++) {
-            temp = g->arr[j];
-            u = g->arr[j]->src;
-            while(temp != NULL){
-                v = temp->val;
-                weight = temp->cost;
-                if (dist[u] != INF && dist[u] + weight < dist[v])
-                    dist[v] = dist[u] + weight;
-
-                temp = temp->next;
-            }
-
+        src = sr->arr[z]->src;
+        for (i = 0; i < g->v; i++){
+            shortest[i] = INF;
         }
-    }
+        shortest[src] = 0;
 
-    printArr(dist, g->v);
+
+        for (i = 2; i <= g->v-1; i++) {
+            for ( j = 1; j < g->v ; j++) {
+                if(g->arr[j] != NULL){
+                    temp = g->arr[j];
+                    u = g->arr[j]->src;
+                    while(temp != NULL){
+                        v = temp->val;
+                        weight = temp->cost;
+                        if (shortest[u] != INF && shortest[u] + weight < shortest[v]){
+                            shortest[v] = shortest[u] + weight;
+                        }
+                        temp = temp->next;
+                    }
+                    if(i == g->v-1){
+                        if(ses[u]!=0){
+                            if(shortest[u] < INF){
+                                Topology += shortest[u];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if(max > Topology && Topology != 0){
+            max = Topology;
+        }
+        Topology = 0;
+    }
+    if(max==INF){
+        max = 0;
+    }
+    Topology = max;
+    //printArr(dist, g->v);
 
     return;
 }
@@ -258,8 +287,10 @@ void init(){
     int links;
     int u, v, c;
     char *token;
+    int *server_ez;
     char input[MAX];
     struct graph* adj;
+
     struct graph* sr;
     scanf("%[^\n]s", input);
 
@@ -286,7 +317,9 @@ void init(){
         }
 
         /**Main operations have to work inside the cycle**/
-        sr = ArPoints(adj);
+        server_ez = (int *)calloc(adj->v,sizeof(int));
+        sr = ArPoints(adj,server_ez);
+
         if(sr!=NULL);
 
         if(NServers){
@@ -303,7 +336,7 @@ void init(){
                 Cable = 0;
 
                 /**Bellman-Ford**/
-                bellmanFord(adj,sr->arr[0]->src);
+                bellmanFord(adj,sr->arr[0]->src,sr,server_ez);
                 if(Topology!=-INF){
                     printf("%d\n",Topology);
                 }else{
@@ -319,6 +352,9 @@ void init(){
         }
 
         scanf(" %[^\n]s", input);
+
+        free(server_ez);
+        free(sr);
         free(adj);
     }
 
