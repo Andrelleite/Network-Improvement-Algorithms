@@ -1,11 +1,5 @@
 # depslib dependency file v1.0
-1590863027 source:c:\users\killz\desktop\lap3\main.c
-	<math.h>
-	<stdio.h>
-	<stdlib.h>
-	<string.h>
-
-1590893319 source:c:\users\killz\desktop\network_improvement_algorithms-master\main.c
+1591500681 source:c:\users\killz\desktop\lap3\main.c
 	<math.h>
 	<stdio.h>
 	<stdlib.h>
